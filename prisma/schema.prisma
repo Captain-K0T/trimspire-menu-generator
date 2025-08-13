@@ -17,12 +17,13 @@ generator client {
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
+  password      String?        // <--- ДОБАВЛЕНО ЭТО ПОЛЕ
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  
-  quizAnswers   QuizAnswers?   // Связь с ответами на квиз (один к одному)
-  subscription  Subscription?  // Связь с подпиской (один к одному)
-  generatedMenus WeeklyMenu[]  // У пользователя может быть много сгенерированных меню
+
+  quizAnswers   QuizAnswers?
+  subscription  Subscription?
+  generatedMenus WeeklyMenu[]
 }
 
 // Модель для хранения ответов на квиз
