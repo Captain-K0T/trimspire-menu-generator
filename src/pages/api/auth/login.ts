@@ -2,8 +2,9 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../lib/prisma';
-import nodemailer from 'nodemailer';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { serialize } from 'cookie';
 
 export default async function handle(
   req: NextApiRequest,
@@ -13,59 +14,43 @@ export default async function handle(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email } = req.body;
+  const { email, password } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  // 1. Проверяем, есть ли такой пользователь в базе данных
+  // 1. Находим пользователя по email
   const user = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (!user) {
-    return res.status(404).json({ error: 'User not found. Please complete the quiz first.' });
+  if (!user || !user.password) {
+    return res.status(401).json({ error: 'Invalid credentials or password not set' });
   }
 
-  // 2. Создаем безопасный, временный токен
+  // 2. Сравниваем введенный пароль с хэшем в базе данных
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // 3. Если все верно, создаем сессию (как и раньше)
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not defined in .env file');
-  }
-  // Токен будет "жить" 15 минут
-  const token = jwt.sign({ userId: user.id }, secret, { expiresIn: '15m' });
+  if (!secret) throw new Error('JWT_SECRET is not defined');
 
-  // 3. Формируем "магическую ссылку"
-  const loginUrl = `http://localhost:3001/api/auth/verify?token=${token}`;
+  const sessionToken = jwt.sign({ userId: user.id }, secret, { expiresIn: '7d' });
 
-  // 4. Настраиваем отправку письма через Ethereal
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
-    },
+  const cookie = serialize('auth_token', sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== 'development',
+    sameSite: 'strict',
+    maxAge: 60 * 60 * 24 * 7, // 7 дней
+    path: '/',
   });
 
-  // 5. Отправляем письмо
-  try {
-    await transporter.sendMail({
-      from: '"Trimspire" <noreply@trimspire.com>',
-      to: email,
-      subject: 'Your Magic Link to Login',
-      html: `
-        <h1>Login to Trimspire</h1>
-        <p>Click the link below to log in. This link is valid for 15 minutes.</p>
-        <a href="${loginUrl}">Click here to log in</a>
-      `,
-    });
+  res.setHeader('Set-Cookie', cookie);
 
-    res.status(200).json({ message: 'Login link sent. Please check your email.' });
-
-  } catch (error) {
-    console.error("Failed to send email", error);
-    res.status(500).json({ error: 'Failed to send login email.' });
-  }
+  return res.status(200).json({ message: 'Logged in successfully' });
 }

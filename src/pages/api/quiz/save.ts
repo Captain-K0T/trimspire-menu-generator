@@ -35,8 +35,8 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
 
     const user = await prisma.user.upsert({
         where: { email },
-        update: {}, // Если пользователь есть, ничего не меняем
-        create: { email }, // Если нет - создаем
+        update: {},
+        create: { email },
     });
 
     await prisma.quizAnswers.upsert({
@@ -48,15 +48,10 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         },
     });
 
-    // --- НОВАЯ ЛОГИКА: ОТПРАВКА ССЫЛКИ ПОСЛЕ СОХРАНЕНИЯ ---
-
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error('JWT_SECRET is not defined');
 
-    // Токен для установки пароля, действует 1 час
     const token = jwt.sign({ userId: user.id }, secret, { expiresIn: '1h' });
-
-    // Ссылка теперь ведет на страницу /set-password
     const setPasswordUrl = `http://localhost:3001/set-password?token=${token}`;
 
     const transporter = nodemailer.createTransport({
@@ -68,14 +63,20 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         },
     });
 
-    await transporter.sendMail({
+    // Отправляем письмо
+    const info = await transporter.sendMail({ // <--- ИЗМЕНЕНИЕ 1: Сохраняем результат
         from: '"Trimspire" <noreply@trimspire.com>',
-        to: email,
+        to: email, // Email, который ввел пользователь
         subject: 'Set up your Trimspire Account',
         html: `<h1>Welcome to Trimspire!</h1>
                <p>Click the link below to set your password. This link is valid for 1 hour.</p>
                <a href="${setPasswordUrl}">Click here to create password</a>`,
     });
+
+    // --- ИЗМЕНЕНИЕ 2: Выводим ссылку на тестовое письмо в консоль ---
+    console.log("Message sent: %s", info.messageId);
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    // -----------------------------------------------------------------
 
     return res.status(200).json({ message: 'User data saved and password setup link sent.' });
 
