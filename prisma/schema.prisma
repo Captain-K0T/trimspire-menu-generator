@@ -1,0 +1,179 @@
+// Этот блок описывает, как наше приложение будет подключаться к базе данных.
+// Адрес подключения берется из файла .env, чтобы сохранить его в секрете.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Этот блок указывает, что мы будем использовать Prisma Client для генерации
+// кода для взаимодействия с базой данных.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// === МОДЕЛИ ДАННЫХ ===
+
+// Модель для пользователя
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  quizAnswers   QuizAnswers?   // Связь с ответами на квиз (один к одному)
+  subscription  Subscription?  // Связь с подпиской (один к одному)
+  generatedMenus WeeklyMenu[]  // У пользователя может быть много сгенерированных меню
+}
+
+// Модель для хранения ответов на квиз
+model QuizAnswers {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique // Связь с пользователем
+  
+  // Здесь мы будем хранить ответы. Названия полей соответствуют вопросам.
+  goal              String?
+  bodyType          String?
+  mainStruggle      String[] // Массив строк для вопросов с множественным выбором
+  followedDiets     String[]
+  dietExperience    String?
+  eatingGuilt       String?
+  bestShape         String?
+  improveAreas      String[]
+  activityLevel     String?
+  energyLevels      String?
+  sleepHours        String?
+  mealsPerDay       String?
+  waterIntake       String?
+  ageRange          String?
+  currentWeight     Float?
+  height            Float?
+  goalWeight        Float?
+  likedVegetables   String[]
+  meatPreferences   String[]
+  sideDishes        String[]
+  healthyFoods      String[]
+  allergies         String[]
+  dislikedFoods     String[]
+  stomachDiscomfort Boolean?
+  mealPrepTime      String?
+  motivation        String[]
+  lifeEvents        String[]
+  upcomingEvent     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Модель для подписки пользователя
+model Subscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  status    String   // например, "active", "cancelled", "expired"
+  expiresAt DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// === МОДЕЛИ ДЛЯ РЕЦЕПТОВ И МЕНЮ ===
+
+// Основная модель рецепта
+model Recipe {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  instructions  String
+  imageUrl      String?
+  
+  // КБЖУ
+  calories      Int
+  proteins      Int
+  fats          Int
+  carbs         Int
+  cookingTime   Int // в минутах
+
+  ingredients RecipeIngredient[] // Связь с ингредиентами (многие-ко-многим)
+  tags        RecipeTag[]        // Связь с тегами (многие-ко-многим)
+  
+  // Связи с еженедельным меню
+  breakfastInMenus WeeklyMenuMeal[] @relation("BreakfastRecipes")
+  lunchInMenus     WeeklyMenuMeal[] @relation("LunchRecipes")
+  dinnerInMenus    WeeklyMenuMeal[] @relation("DinnerRecipes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Справочник ингредиентов
+model Ingredient {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String   // "Овощи", "Мясо", "Бакалея" и т.д.
+  
+  recipes   RecipeIngredient[] // Связь с рецептами (многие-ко-многим)
+}
+
+// Связующая таблица для рецептов и ингредиентов
+model RecipeIngredient {
+  recipe        Recipe     @relation(fields: [recipeId], references: [id])
+  recipeId      String
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId  String
+  
+  quantity      Float    // Количество (например, 1.5, 200)
+  unit          String   // Единица измерения ("шт", "г", "мл")
+  
+  @@id([recipeId, ingredientId]) // Составной первичный ключ
+}
+
+// Справочник тегов
+model Tag {
+  id      String @id @default(cuid())
+  name    String @unique // "вегетарианское", "без-глютена", "быстро"
+  
+  recipes RecipeTag[] // Связь с рецептами (многие-ко-многим)
+}
+
+// Связующая таблица для рецептов и тегов
+model RecipeTag {
+  recipe    Recipe @relation(fields: [recipeId], references: [id])
+  recipeId  String
+  tag       Tag    @relation(fields: [tagId], references: [id])
+  tagId     String
+  
+  @@id([recipeId, tagId])
+}
+
+// === МОДЕЛИ ДЛЯ СГЕНЕРИРОВАННОГО МЕНЮ ===
+
+// Модель для хранения одного сгенерированного меню на неделю
+model WeeklyMenu {
+  id      String   @id @default(cuid())
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String
+  
+  weekStartDate DateTime
+  meals         WeeklyMenuMeal[]
+
+  createdAt DateTime @default(now())
+}
+
+// Модель для хранения одного приема пищи в рамках недельного меню
+model WeeklyMenuMeal {
+  id           String   @id @default(cuid())
+  weeklyMenu   WeeklyMenu @relation(fields: [weeklyMenuId], references: [id])
+  weeklyMenuId String
+  
+  dayOfWeek    Int // 1=Понедельник, 2=Вторник, ...
+  mealType     String // "breakfast", "lunch", "dinner"
+  
+  // Связи с рецептами
+  breakfast    Recipe?  @relation("BreakfastRecipes", fields: [breakfastId], references: [id])
+  breakfastId  String?
+  lunch        Recipe?  @relation("LunchRecipes", fields: [lunchId], references: [id])
+  lunchId      String?
+  dinner       Recipe?  @relation("DinnerRecipes", fields: [dinnerId], references: [id])
+  dinnerId     String?
+}
