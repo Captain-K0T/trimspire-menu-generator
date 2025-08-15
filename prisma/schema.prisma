@@ -85,6 +85,7 @@ model Recipe {
   id            String   @id @default(cuid())
   title         String
   description   String
+  mealType      String
   instructions  String
   imageUrl      String?
   
