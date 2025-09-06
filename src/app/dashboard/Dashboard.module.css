@@ -1,0 +1,117 @@
+/* Код для файла src/app/dashboard/Dashboard.module.css */
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: var(--text-color-light);
+}
+
+.loading,
+.error {
+  text-align: center;
+  font-size: 1.5rem;
+  padding: 5rem 0;
+  color: var(--text-color-light);
+}
+
+.weekGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 7 колонок для 7 дней */
+  gap: 1.5rem;
+}
+
+.dayColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dayTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-color-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.mealCard {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+  padding: 1rem;
+  cursor: pointer; /* Намек на то, что можно кликнуть */
+}
+
+.mealCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.mealType {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4299E1; /* Синий акцент для типа еды */
+  margin-bottom: 0.5rem;
+}
+
+.mealTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-bottom: 0.25rem;
+}
+
+.mealDetails {
+  font-size: 0.85rem;
+  color: var(--text-color-light);
+}
+
+.logoutButton {
+  display: block;
+  margin: 4rem auto 1rem;
+  padding: 0.75rem 2rem;
+  border: 1px solid #E53E3E;
+  background-color: transparent;
+  color: #E53E3E;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: #E53E3E;
+  color: white;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 1200px) {
+  .weekGrid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  .dayTitle {
+    text-align: left;
+  }
+}
