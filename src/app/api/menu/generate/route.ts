@@ -3,6 +3,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import { calculateMacros } from './utils'; // <-- ИМПОРТИРУЕМ НАШУ НОВУЮ ФУНКЦИЮ
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-for-dev';
@@ -22,16 +23,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Неверный токен доступа' }, { status: 401 });
     }
 
-    // --- ИЗМЕНЕНИЕ: Получаем не только меню, но и данные анкеты ---
     const [quizAnswers, allRecipes] = await Promise.all([
       prisma.quizAnswers.findUnique({ where: { userId } }),
       prisma.recipe.findMany(),
     ]);
-    // -----------------------------------------------------------
 
     if (!quizAnswers) {
       return NextResponse.json({ error: 'Ответы на анкету не найдены' }, { status: 404 });
     }
+
+    // --- ИЗМЕНЕНИЕ: Вызываем функцию расчёта КБЖУ ---
+    const recommendedMacros = calculateMacros(quizAnswers);
+    // --------------------------------------------------
 
     const breakfastPool = allRecipes.filter(r => r.mealType === 'BREAKFAST');
     const lunchPool = allRecipes.filter(r => r.mealType === 'LUNCH');
@@ -56,15 +59,16 @@ export async function GET(req: NextRequest) {
       generatedMenuPlan.push(dayMenu);
     }
     
-    // --- ИЗМЕНЕНИЕ: Отправляем на фронтенд и меню, и данные пользователя ---
+    // --- ИЗМЕНЕНИЕ: Отправляем на фронтенд новые данные ---
     return NextResponse.json({ 
       weekPlan: generatedMenuPlan,
       userData: {
         currentWeight: quizAnswers.currentWeight,
         goalWeight: quizAnswers.goalWeight,
-      }
+      },
+      recommendedMacros, // <-- ДОБАВЛЯЕМ РАССЧИТАННЫЕ ЗНАЧЕНИЯ
     });
-    // -----------------------------------------------------------------
+    // ----------------------------------------------------
 
   } catch (error) {
     console.error('Ошибка при генерации меню:', error);

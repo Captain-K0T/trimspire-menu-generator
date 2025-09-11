@@ -17,10 +17,9 @@ generator client {
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
-  password      String?        // <--- ДОБАВЛЕНО ЭТО ПОЛЕ
+  password      String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-
   quizAnswers   QuizAnswers?
   subscription  Subscription?
   generatedMenus WeeklyMenu[]
@@ -30,57 +29,62 @@ model User {
 model QuizAnswers {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id])
-  userId    String   @unique // Связь с пользователем
-  
-  // Здесь мы будем хранить ответы. Названия полей соответствуют вопросам.
-  goal              String?
+  userId    String   @unique
+
+  // --- Single-choice вопросы (один ответ) ---
+  mainGoal          String?
   bodyType          String?
-  mainStruggle      String[] // Массив строк для вопросов с множественным выбором
-  followedDiets     String[]
+  goal              String?
   dietExperience    String?
   eatingGuilt       String?
   bestShape         String?
-  improveAreas      String[]
   activityLevel     String?
   energyLevels      String?
   sleepHours        String?
   mealsPerDay       String?
   waterIntake       String?
   ageRange          String?
-  currentWeight     Float?
-  height            Float?
-  goalWeight        Float?
+  stomachDiscomfort Boolean?
+  mealPrepTime      String?
+  
+  // --- Multiple-choice вопросы (много ответов) ---
+  mainStruggle      String[]
+  followedDiets     String[]
+  improveAreas      String[]
   likedVegetables   String[]
   meatPreferences   String[]
   sideDishes        String[]
   healthyFoods      String[]
   allergies         String[]
   dislikedFoods     String[]
-  stomachDiscomfort Boolean?
-  mealPrepTime      String?
   motivation        String[]
   lifeEvents        String[]
-  upcomingEvent     String?
+  upcomingEvent     String[]
 
+  // --- Числовые вопросы ---
+  currentWeight     Float?
+  height            Float?
+  goalWeight        Float?
+
+  // --- Служебные поля ---
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 
 // Модель для подписки пользователя
 model Subscription {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String   @unique
-  status    String   // например, "active", "cancelled", "expired"
+  status    String
   expiresAt DateTime?
-  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 // === МОДЕЛИ ДЛЯ РЕЦЕПТОВ И МЕНЮ ===
 
-// Основная модель рецепта
 model Recipe {
   id            String   @id @default(cuid())
   title         String
@@ -88,18 +92,15 @@ model Recipe {
   mealType      String
   instructions  String
   imageUrl      String?
-  
-  // КБЖУ
   calories      Int
   proteins      Int
   fats          Int
   carbs         Int
-  cookingTime   Int // в минутах
+  cookingTime   Int
 
-  ingredients RecipeIngredient[] // Связь с ингредиентами (многие-ко-многим)
-  tags        RecipeTag[]        // Связь с тегами (многие-ко-многим)
+  ingredients RecipeIngredient[]
+  tags        RecipeTag[]
   
-  // Связи с еженедельным меню
   breakfastInMenus WeeklyMenuMeal[] @relation("BreakfastRecipes")
   lunchInMenus     WeeklyMenuMeal[] @relation("LunchRecipes")
   dinnerInMenus    WeeklyMenuMeal[] @relation("DinnerRecipes")
@@ -108,37 +109,30 @@ model Recipe {
   updatedAt DateTime @updatedAt
 }
 
-// Справочник ингредиентов
 model Ingredient {
   id        String   @id @default(cuid())
   name      String   @unique
-  category  String   // "Овощи", "Мясо", "Бакалея" и т.д.
-  
-  recipes   RecipeIngredient[] // Связь с рецептами (многие-ко-многим)
+  category  String
+  recipes   RecipeIngredient[]
 }
 
-// Связующая таблица для рецептов и ингредиентов
 model RecipeIngredient {
   recipe        Recipe     @relation(fields: [recipeId], references: [id])
   recipeId      String
   ingredient    Ingredient @relation(fields: [ingredientId], references: [id])
   ingredientId  String
+  quantity      Float
+  unit          String
   
-  quantity      Float    // Количество (например, 1.5, 200)
-  unit          String   // Единица измерения ("шт", "г", "мл")
-  
-  @@id([recipeId, ingredientId]) // Составной первичный ключ
+  @@id([recipeId, ingredientId])
 }
 
-// Справочник тегов
 model Tag {
   id      String @id @default(cuid())
-  name    String @unique // "вегетарианское", "без-глютена", "быстро"
-  
-  recipes RecipeTag[] // Связь с рецептами (многие-ко-многим)
+  name    String @unique
+  recipes RecipeTag[]
 }
 
-// Связующая таблица для рецептов и тегов
 model RecipeTag {
   recipe    Recipe @relation(fields: [recipeId], references: [id])
   recipeId  String
@@ -148,34 +142,27 @@ model RecipeTag {
   @@id([recipeId, tagId])
 }
 
-// === МОДЕЛИ ДЛЯ СГЕНЕРИРОВАННОГО МЕНЮ ===
 
-// Модель для хранения одного сгенерированного меню на неделю
 model WeeklyMenu {
   id      String   @id @default(cuid())
   user    User     @relation(fields: [userId], references: [id])
   userId  String
-  
   weekStartDate DateTime
   meals         WeeklyMenuMeal[]
-
   createdAt DateTime @default(now())
 }
 
-// Модель для хранения одного приема пищи в рамках недельного меню
 model WeeklyMenuMeal {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   weeklyMenu   WeeklyMenu @relation(fields: [weeklyMenuId], references: [id])
   weeklyMenuId String
+  dayOfWeek    Int
+  mealType     String
   
-  dayOfWeek    Int // 1=Понедельник, 2=Вторник, ...
-  mealType     String // "breakfast", "lunch", "dinner"
-  
-  // Связи с рецептами
-  breakfast    Recipe?  @relation("BreakfastRecipes", fields: [breakfastId], references: [id])
+  breakfast    Recipe?    @relation("BreakfastRecipes", fields: [breakfastId], references: [id])
   breakfastId  String?
-  lunch        Recipe?  @relation("LunchRecipes", fields: [lunchId], references: [id])
+  lunch        Recipe?    @relation("LunchRecipes", fields: [lunchId], references: [id])
   lunchId      String?
-  dinner       Recipe?  @relation("DinnerRecipes", fields: [dinnerId], references: [id])
+  dinner       Recipe?    @relation("DinnerRecipes", fields: [dinnerId], references: [id])
   dinnerId     String?
 }

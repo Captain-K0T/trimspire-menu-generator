@@ -6,11 +6,20 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Dashboard.module.css';
 
-// Обновляем типы данных, которые теперь приходят с сервера
+// Обновляем типы данных
 interface UserData {
   currentWeight: number | null;
   goalWeight: number | null;
 }
+
+// --- ИЗМЕНЕНИЕ: Добавляем тип для КБЖУ ---
+interface RecommendedMacros {
+  calories: number;
+  proteins: number;
+  fats: number;
+  carbs: number;
+}
+// ------------------------------------------
 
 interface Meal {
   id: string;
@@ -31,13 +40,12 @@ interface DayPlan {
 export default function DashboardPage() {
   const router = useRouter();
   
-  // Состояния для хранения данных
+  // Добавляем новые состояния
   const [weekPlan, setWeekPlan] = useState<DayPlan[] | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [macros, setMacros] = useState<RecommendedMacros | null>(null); // <-- НОВОЕ СОСТОЯНИЕ
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Состояние для активного таба (дня недели)
   const [activeDayIndex, setActiveDayIndex] = useState(0);
 
   useEffect(() => {
@@ -51,6 +59,7 @@ export default function DashboardPage() {
         const data = await response.json();
         setWeekPlan(data.weekPlan);
         setUserData(data.userData);
+        setMacros(data.recommendedMacros); // <-- СОХРАНЯЕМ ДАННЫЕ В СОСТОЯНИЕ
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -85,13 +94,17 @@ export default function DashboardPage() {
             <p>Ваш желаемый вес: <strong>{userData.goalWeight || 'N/A'} кг</strong></p>
           </div>
         )}
-        <div className={styles.recommendedMacros}>
-          <span>Мы рекомендуем:</span>
-          <p>🔥 3500</p>
-          <p>🥩 200</p>
-          <p>🥑 100</p>
-          <p>🍞 250</p>
-        </div>
+        {/* --- ИЗМЕНЕНИЕ: Отображаем динамические данные --- */}
+        {macros && (
+          <div className={styles.recommendedMacros}>
+            <span>Мы рекомендуем:</span>
+            <p>🔥 {macros.calories}</p>
+            <p>🥩 {macros.proteins}</p>
+            <p>🥑 {macros.fats}</p>
+            <p>🍞 {macros.carbs}</p>
+          </div>
+        )}
+        {/* ----------------------------------------------- */}
       </header>
       
       <main className={styles.mainContent}>

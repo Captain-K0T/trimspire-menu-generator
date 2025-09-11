@@ -5,6 +5,47 @@ import prisma from '../../../lib/prisma';
 import Cors from 'cors';
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
+import { Prisma } from '@prisma/client';
+
+const mapAnswersToDbSchema = (answers: Record<string, any>): Prisma.QuizAnswersCreateInput => {
+  const mapped: any = {};
+
+  // ИСПРАВЛЕНИЕ: Теперь маппинг соответствует финальной схеме Prisma
+  const mapping: Record<number, string> = {
+    1: 'mainGoal', 2: 'bodyType', 3: 'goal', 4: 'mainStruggle', 5: 'followedDiets',
+    6: 'dietExperience', 7: 'eatingGuilt', 8: 'bestShape', 9: 'improveAreas',
+    10: 'activityLevel', 11: 'energyLevels', 12: 'sleepHours', 13: 'mealsPerDay',
+    14: 'waterIntake', 15: 'ageRange', 16: 'currentWeight', 17: 'height',
+    18: 'goalWeight', 19: 'likedVegetables', 20: 'meatPreferences', 21: 'sideDishes',
+    22: 'healthyFoods', 23: 'allergies', 24: 'dislikedFoods', 25: 'stomachDiscomfort',
+    26: 'mealPrepTime', 27: 'motivation', 28: 'lifeEvents', 29: 'upcomingEvent',
+  };
+
+  for (const key in answers) {
+    const questionId = parseInt(key, 10);
+    const dbField = mapping[questionId];
+    
+    if (dbField) {
+      const answer = answers[key];
+      
+      if (typeof answer === 'object' && answer !== null && 'value' in answer) {
+        const numericValue = parseFloat(String(answer.value).replace(',', '.'));
+        if (!isNaN(numericValue)) {
+            mapped[dbField] = numericValue;
+        }
+      } 
+      else if (dbField === 'stomachDiscomfort') {
+        mapped[dbField] = answer === 'Yes';
+      }
+      else {
+        mapped[dbField] = answer;
+      }
+    }
+  }
+
+  return mapped;
+};
+
 
 const cors = Cors({
   methods: ['POST', 'HEAD'],
@@ -38,13 +79,15 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         update: {},
         create: { email },
     });
+    
+    const dataToSave = mapAnswersToDbSchema(answers);
 
     await prisma.quizAnswers.upsert({
         where: { userId: user.id },
-        update: { /* ... mapping answers ... */ },
+        update: dataToSave,
         create: {
             userId: user.id,
-            // TODO: Добавить сюда маппинг для всех остальных ответов
+            ...dataToSave,
         },
     });
 
@@ -63,20 +106,17 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         },
     });
 
-    // Отправляем письмо
-    const info = await transporter.sendMail({ // <--- ИЗМЕНЕНИЕ 1: Сохраняем результат
+    const info = await transporter.sendMail({
         from: '"Trimspire" <noreply@trimspire.com>',
-        to: email, // Email, который ввел пользователь
+        to: email,
         subject: 'Set up your Trimspire Account',
         html: `<h1>Welcome to Trimspire!</h1>
                <p>Click the link below to set your password. This link is valid for 1 hour.</p>
                <a href="${setPasswordUrl}">Click here to create password</a>`,
     });
 
-    // --- ИЗМЕНЕНИЕ 2: Выводим ссылку на тестовое письмо в консоль ---
     console.log("Message sent: %s", info.messageId);
     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    // -----------------------------------------------------------------
 
     return res.status(200).json({ message: 'User data saved and password setup link sent.' });
 
