@@ -6,20 +6,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Dashboard.module.css';
 
-// Обновляем типы данных
+// ... (интерфейсы UserData, RecommendedMacros, Meal, DayPlan остаются без изменений) ...
+
 interface UserData {
   currentWeight: number | null;
   goalWeight: number | null;
 }
 
-// --- ИЗМЕНЕНИЕ: Добавляем тип для КБЖУ ---
 interface RecommendedMacros {
   calories: number;
   proteins: number;
   fats: number;
   carbs: number;
 }
-// ------------------------------------------
 
 interface Meal {
   id: string;
@@ -37,13 +36,13 @@ interface DayPlan {
   meals: Meal[];
 }
 
+
 export default function DashboardPage() {
   const router = useRouter();
   
-  // Добавляем новые состояния
   const [weekPlan, setWeekPlan] = useState<DayPlan[] | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [macros, setMacros] = useState<RecommendedMacros | null>(null); // <-- НОВОЕ СОСТОЯНИЕ
+  const [macros, setMacros] = useState<RecommendedMacros | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
@@ -59,7 +58,7 @@ export default function DashboardPage() {
         const data = await response.json();
         setWeekPlan(data.weekPlan);
         setUserData(data.userData);
-        setMacros(data.recommendedMacros); // <-- СОХРАНЯЕМ ДАННЫЕ В СОСТОЯНИЕ
+        setMacros(data.recommendedMacros);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -86,6 +85,12 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.container}>
+      {/* --- ИЗМЕНЕНИЕ: Добавили новую кнопку-иконку --- */}
+      <button onClick={handleLogout} className={styles.logoutIcon}>
+        🚪
+      </button>
+      {/* ------------------------------------------- */}
+
       <header className={styles.header}>
         <h1 className={styles.title}>Ваш план питания</h1>
         {userData && (
@@ -94,7 +99,6 @@ export default function DashboardPage() {
             <p>Ваш желаемый вес: <strong>{userData.goalWeight || 'N/A'} кг</strong></p>
           </div>
         )}
-        {/* --- ИЗМЕНЕНИЕ: Отображаем динамические данные --- */}
         {macros && (
           <div className={styles.recommendedMacros}>
             <span>Мы рекомендуем:</span>
@@ -104,7 +108,6 @@ export default function DashboardPage() {
             <p>🍞 {macros.carbs}</p>
           </div>
         )}
-        {/* ----------------------------------------------- */}
       </header>
       
       <main className={styles.mainContent}>
@@ -141,7 +144,7 @@ export default function DashboardPage() {
         </section>
       </main>
 
-      <button onClick={handleLogout} className={styles.logoutButton}>Выйти</button>
+      {/* --- ИЗМЕНЕНИЕ: Удалили старую кнопку --- */}
     </div>
   );
 }

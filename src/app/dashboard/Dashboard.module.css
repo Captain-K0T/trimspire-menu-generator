@@ -4,7 +4,28 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  position: relative; /* <-- ИЗМЕНЕНИЕ: Добавили это свойство */
 }
+
+/* --- ИЗМЕНЕНИЕ: Добавили стили для новой иконки --- */
+.logoutIcon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 2.2rem; /* Увеличили размер для удобства нажатия */
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: transform 0.2s ease-in-out;
+}
+
+.logoutIcon:hover {
+  transform: scale(1.1);
+}
+/* ---------------------------------------------------- */
+
 
 /* --- Хедер --- */
 .header {
@@ -136,23 +157,9 @@
 }
 
 
-/* --- Кнопка выхода --- */
+/* --- ИЗМЕНЕНИЕ: Удалили стили для старой кнопки --- */
 .logoutButton {
-  display: block;
-  margin: 4rem auto 1rem;
-  padding: 0.75rem 2rem;
-  border: 1px solid #E53E3E;
-  background-color: transparent;
-  color: #E53E3E;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.logoutButton:hover {
-  background-color: #E53E3E;
-  color: white;
+  display: none; /* Или можно полностью удалить этот блок */
 }
 
 .loading, .error {
