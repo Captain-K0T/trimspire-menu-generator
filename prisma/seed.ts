@@ -1,13 +1,11 @@
+// Код для файла prisma/seed.ts
+
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log(`Start seeding ...`);
-
-  // Очистку можно закомментировать, т.к. reset уже все сделал
-  // await prisma.recipeTag.deleteMany();
-  // ...
 
   console.log('Creating tags...');
   await prisma.tag.createMany({
@@ -16,7 +14,7 @@ async function main() {
       { name: 'Классика' }, { name: 'Без глютена' }, { name: 'Просто' },
       { name: 'Италия' }, { name: 'Экзотика' },
     ],
-    skipDuplicates: true, // Добавим на всякий случай
+    skipDuplicates: true,
   });
   console.log('Tags created.');
   
@@ -39,10 +37,10 @@ async function main() {
   await prisma.recipe.create({
     data: {
       title: 'Овсяная каша с ягодами и орехами',
-      description: 'Идеальный здоровый завтрак, который зарядит энергией на весь день.',
-      mealType: 'BREAKFAST', // ИСПРАВЛЕНО
+      description: 'Идеальный здоровый завтрак, который зарядит энергией на весь день. Начните утро правильно с этим простым и вкусным блюдом.',
+      mealType: 'BREAKFAST',
       instructions: '1. Залейте овсяные хлопья водой или молоком...',
-      imageUrl: '/images/oatmeal.jpg',
+      imageUrl: '/images/reciept.jpg', // <--- ИЗМЕНЕНИЕ
       calories: 350, proteins: 10, fats: 12, carbs: 50, cookingTime: 10,
       tags: { create: [{ tag: { connect: { name: 'Быстро' } } }, { tag: { connect: { name: 'Вегетарианство' } } }, { tag: { connect: { name: 'Классика' } } }] },
       ingredients: { create: [{ quantity: 50, unit: 'г', ingredient: { connect: { name: 'Овсяные хлопья' } } }, { quantity: 70, unit: 'г', ingredient: { connect: { name: 'Ягоды (ассорти)' } } }, { quantity: 20, unit: 'г', ingredient: { connect: { name: 'Грецкие орехи' } } }] },
@@ -52,10 +50,10 @@ async function main() {
   await prisma.recipe.create({
     data: {
       title: 'Запеченный лосось со спаржей',
-      description: 'Простой, элегантный и очень полезный ужин. Готовится практически без усилий.',
-      mealType: 'DINNER', // ИСПРАВЛЕНО
+      description: 'Простой, элегантный и очень полезный ужин. Готовится практически без усилий, идеален для буднего вечера.',
+      mealType: 'DINNER',
       instructions: '1. Разогрейте духовку до 200°C...',
-      imageUrl: '/images/salmon.jpg',
+      imageUrl: '/images/reciept.jpg', // <--- ИЗМЕНЕНИЕ
       calories: 480, proteins: 40, fats: 30, carbs: 10, cookingTime: 20,
       tags: { create: [{ tag: { connect: { name: 'Просто' } } }, { tag: { connect: { name: 'Без глютена' } } }] },
       ingredients: { create: [{ quantity: 200, unit: 'г', ingredient: { connect: { name: 'Лосось (филе)' } } }, { quantity: 150, unit: 'г', ingredient: { connect: { name: 'Спаржа' } } }, { quantity: 15, unit: 'мл', ingredient: { connect: { name: 'Оливковое масло' } } }] },
@@ -65,10 +63,10 @@ async function main() {
   await prisma.recipe.create({
     data: {
       title: 'Куриная грудка с брокколи и рисом',
-      description: 'Сбалансированный обед для тех, кто следит за фигурой и ценит простоту в приготовлении.',
-      mealType: 'LUNCH', // ИСПРАВЛЕНО
+      description: 'Сбалансированный обед для тех, кто следит за фигурой и ценит простоту в приготовлении. Отличный источник белка.',
+      mealType: 'LUNCH',
       instructions: '1. Отварите рис согласно инструкции на упаковке...',
-      imageUrl: '/images/chicken-broccoli.jpg',
+      imageUrl: '/images/reciept.jpg', // <--- ИЗМЕНЕНИЕ
       calories: 450, proteins: 50, fats: 10, carbs: 40, cookingTime: 25,
       tags: { create: [{ tag: { connect: { name: 'Просто' } } }, { tag: { connect: { name: 'Без глютена' } } }] },
       ingredients: { create: [{ quantity: 180, unit: 'г', ingredient: { connect: { name: 'Куриная грудка' } } }, { quantity: 150, unit: 'г', ingredient: { connect: { name: 'Брокколи' } } }, { quantity: 50, unit: 'г', ingredient: { connect: { name: 'Рис басмати' } } }] },

@@ -1,92 +1,142 @@
 /* Код для файла src/app/dashboard/Dashboard.module.css */
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
 
+/* --- Хедер --- */
 .header {
   text-align: center;
   margin-bottom: 3rem;
 }
-
 .title {
-  font-size: 2.8rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--accent-color);
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
-
-.subtitle {
-  font-size: 1.2rem;
+.weightInfo {
   color: var(--text-color-light);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
 }
-
-.loading,
-.error {
-  text-align: center;
-  font-size: 1.5rem;
-  padding: 5rem 0;
-  color: var(--text-color-light);
-}
-
-.weekGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr); /* 7 колонок для 7 дней */
+.recommendedMacros {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 1.5rem;
+  background-color: var(--card-background);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.recommendedMacros span {
+  font-weight: 600;
+  color: var(--text-color-light);
+}
+.recommendedMacros p {
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
-.dayColumn {
+/* --- Основной контент (табы + сетка) --- */
+.mainContent {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+}
+
+/* --- Табы дней недели (слева) --- */
+.dayTabs {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
+}
+.dayTab {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: var(--text-color-light);
+}
+.dayTab:hover {
+  background-color: #e2e8f0;
+  color: var(--accent-color);
+}
+.activeTab {
+  background-color: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.activeTab:hover {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+/* --- Сетка с рецептами (справа) --- */
+.mealsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
 
-.dayTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  color: var(--text-color-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--border-color);
-}
-
+/* --- Карточка рецепта --- */
 .mealCard {
   background-color: var(--card-background);
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
   transition: all 0.2s ease-in-out;
-  padding: 1rem;
-  cursor: pointer; /* Намек на то, что можно кликнуть */
 }
-
 .mealCard:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
-
-.mealType {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #4299E1; /* Синий акцент для типа еды */
-  margin-bottom: 0.5rem;
+.mealImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
 }
-
+.mealContent {
+  padding: 1rem;
+}
 .mealTitle {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
   color: var(--accent-color);
-  margin-bottom: 0.25rem;
 }
-
-.mealDetails {
-  font-size: 0.85rem;
+.mealDescription {
+  font-size: 0.9rem;
   color: var(--text-color-light);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  height: 4.5em; /* 3 строки текста */
+  overflow: hidden;
+}
+.mealMacros {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
 }
 
+
+/* --- Кнопка выхода --- */
 .logoutButton {
   display: block;
   margin: 4rem auto 1rem;
@@ -100,18 +150,38 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .logoutButton:hover {
   background-color: #E53E3E;
   color: white;
 }
 
-/* Адаптивность для мобильных устройств */
-@media (max-width: 1200px) {
-  .weekGrid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+.loading, .error {
+  text-align: center;
+  font-size: 1.5rem;
+  padding: 5rem 0;
+  color: var(--text-color-light);
+}
+
+/* --- Адаптивность --- */
+@media (max-width: 900px) {
+  .mainContent {
+    grid-template-columns: 1fr;
   }
-  .dayTitle {
-    text-align: left;
+  .dayTabs {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+  .dayTab {
+    white-space: nowrap;
+  }
+  .mealsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .mealsGrid {
+    grid-template-columns: 1fr;
   }
 }
